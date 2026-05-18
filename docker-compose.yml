@@ -1,0 +1,57 @@
+services:
+
+  # ── Base de datos ──────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_reservas
+    environment:
+      POSTGRES_DB: reservas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Microservicio de notificaciones ───────────────────────
+  notificaciones:
+    build:
+      context: ./micro-notificaciones
+      dockerfile: Dockerfile
+    container_name: microservicio_notificaciones
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+
+  # ── API principal ─────────────────────────────────────────
+  api-reservas:
+    build:
+      context: ./demo-reservas
+      dockerfile: Dockerfile
+    container_name: api_reservas
+    ports:
+      - "8080:8080"
+    environment:
+      # Base de datos — apunta al servicio "postgres" de docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/reservas
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # JWT
+      JWT_SECRET: dGVzdFNlY3JldEtleVBhcmFKV1RGaXJtYWRvQ29uSFMyNTY=
+      JWT_EXPIRATION: 21600000
+      # URL del microservicio — usa el nombre del servicio docker, no localhost
+      NOTIFICACIONES_URL: http://notificaciones:8081/notificaciones
+    depends_on:
+      postgres:
+        condition: service_healthy
+      notificaciones:
+        condition: service_started
+volumes:
+  postgres_data:
