@@ -36,6 +36,7 @@ API REST para la gestión de reservas y control de ocupación de salones de even
 ├── MICRO-NOTIFICACIONES/           ← Microservicio simulado
 │   ├── src/main/java/
 │   │   └── controllers/
+│   │   └── DTO/
 │   └── Dockerfile
 │
 └── docker-compose.yml
@@ -251,6 +252,7 @@ SUCURSAL
 SALON
   id, nombre, capacidad_maxima, costo_hora
   └── sucursal_id → SUCURSAL
+  └── gestor_id → USUARIO
 
 RESERVAS
   id, documento_cliente, nombre_cliente,
@@ -264,6 +266,7 @@ RESERVA_HISTORICO
   fecha_creacion, asistentes, costo_estimado,
   total_cobrado, motivo_rechazo, estado
   └── salon_id → SALON
+  └── reserva_id → RESERVA
 ```
 
 ---
@@ -284,7 +287,7 @@ Configura una variable de entorno:
 docker-compose up --build
 
 # Solo levantar (si ya está construido)
-
+docker-compose up
 
 # Levantar en segundo plano
 docker-compose up -d
